@@ -1,0 +1,84 @@
+# use glob syntax.
+syntax: glob
+*.ser
+*.class
+*.lcp/*
+.metadata
+*~
+*.bak
+#*.off
+*.old
+*.sc
+.worksheet
+.cache
+*.cache
+.metadata
+.ivy2
+.sbt
+.history
+.cache-main
+.cache-test 
+.cache-tests
+.ensime
+.metadata
+.ensime_cache/
+.cache-*
+# eclipse conf file
+.settings
+.classpath
+.project
+.manager
+.scala_dependencies
+.classpath_nb
+# idea
+.idea
+*.iml
+*.eml
+# emacs
+
+# building
+target
+build
+null
+tmp*
+temp*
+dist
+test-output
+build.log
+
+# other scm
+.svn
+.CVS
+.hg*
+
+# switch to regexp syntax.
+/scalar-package/src/universal/inotify_deps/libinotify-java.so.2
+/scalar-package/src/universal/inotify_deps/libinotify-java.so
+# syntax: regexp
+# ^\.pc/
+#  syntax: regexp
+#  ^\.pc/
+
+/bin
+**/.cache
+*/.cache-main
+*/.cache-tests
+*/bin
+
+.lcp
+
+scalar-package/src/universal/logs/*
+
+scalar-package/src/universal/.ivy2/*
+
+scalar-package/src/universal/.sbt/*
+
+
+#ignore extesibility jar
+scalar-core/lib/com-glassbeam-gbnewplatform-extensibility*
+#ignore contents of watched, permanents and logs folder
+lcpTest/.*
+lcpTest/logs/*
+lcpTest/permanent/*
+lcpTest/watched/*
+.lcp/*

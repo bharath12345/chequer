@@ -26,13 +26,17 @@ object Chequer extends App {
 
     var last_unmarked: Position = _
 
-    mark(start_pos.x, start_pos.y)
+    mark(start_pos.x, start_pos.y, null)
 
-    def complete(): Boolean = cells.forall { case (pos, cell) => cell.mark}
+    def complete(): Boolean = {
+      val x = cells.forall { case (pos, cell) => cell.mark}
+      if(x) println(cells)//cells.foreach(println)
+      x && prev_pos.size == 99
+    }
 
     private def marked(p: Position): Boolean = cells(p).mark
 
-    private def mark(i: Int, j: Int, curr_pos: Position = null): Option[Position] = {
+    private def mark(i: Int, j: Int, curr_pos: Position): Option[Position] = {
       val new_p = Position(i, j)
       cells.get(new_p) match {
         case None =>
@@ -44,11 +48,12 @@ object Chequer extends App {
               //println(s"$new_p is already marked")
               None
             case false =>
-              if(curr_pos != null)
+              if(curr_pos != null) {
                 prev_pos = curr_pos +: prev_pos
+              }
 
               val new_cell = c.copy(mark = true)
-              //println(s"going to mark cell $new_cell")
+              println(s"going to mark cell $new_cell, prev_pos size = ${prev_pos.size}")
               cells += (new_p -> new_cell)
               Option(new_p)
           }
@@ -56,11 +61,11 @@ object Chequer extends App {
     }
 
     def unmark(p: Position): Unit = {
-      //println(s"unmarking position $p")
       last_unmarked = p
       val cell = Cell(p, mark = false)
       cells += (p -> cell)
       prev_pos = prev_pos.tail
+      println(s"unmarking position $p, prev_pos size = ${prev_pos.size}")
     }
 
     // treating the top left corner as origin
@@ -96,7 +101,7 @@ object Chequer extends App {
               (Option(false), None)
             case false =>
               val prev_pos = board.prev_pos.head
-              //println(s"backtracked to position $prev_pos")
+              println(s"backtracked to position $prev_pos")
               board.unmark(p)
               // unmarked p should be skipped in the next iter of traverse
               (None, Option(prev_pos))
@@ -139,12 +144,18 @@ object Chequer extends App {
 
   def visit_all() = {
     val starting_positions: IndexedSeq[Position] = for {i <- 0 to 9; j <- 0 to 9 } yield Position(i, j)
-    val visit_all = starting_positions.forall { start_pos =>
-      compute(start_pos.x, start_pos.y)._1
+    val visits: IndexedSeq[(Boolean, List[Position])] = starting_positions.map { start_pos =>
+      compute(start_pos.x, start_pos.y)
     }
+    val visit_all = visits.forall(_._1)
+    val routes: IndexedSeq[(Position, List[Position])] = starting_positions.zip(visits.map(x => x._2))
     val answer = if(visit_all) (Console.GREEN + "YES!" + Console.RESET) else (Console.RED + "NO :(" + Console.RESET)
     println(Console.BLUE + s"Is it possible for the pawn to visit all tiles on the board following the above rules? "
       + s"Answer: $answer")
+    println(Console.BLUE + "Routes\n" + Console.RESET)
+    routes.foreach { case (start, transit) =>
+      println(Console.BLUE + s"Starting pos: $start, Transit size: ${transit.size}" + Console.GREEN + s" Transit: ${transit}")
+    }
   }
 
   if (args.isEmpty) {

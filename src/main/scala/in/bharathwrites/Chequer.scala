@@ -9,6 +9,15 @@ object Chequer extends App {
 
   class Board(start_pos: Position) {
 
+    val moves: Array[Position => Option[Position]] = Array(
+      markNorth, markSouth, markEast, markWest,
+      markNorthEast, markNorthWest, markSouthEast, markSouthWest)
+
+    val pos: Array[Position => Position] = Array(
+      northPos, southPos, eastPos, westPos,
+      northEastPos, northWestPos, southEastPos, southWestPos)
+
+    // this a single threaded program; so mutable variables are fine
     private var cells: Map[Position, Cell] =
       (for {i <- 0 to 9; j <- 0 to 9 }
         yield {
@@ -17,33 +26,26 @@ object Chequer extends App {
         }).toMap
 
     var prev_pos: List[Position] = List()
-
-    val moves: Array[Position => Option[Position]] = Array(
-      markNorth, markSouth, markEast, markWest,
-      markNorthEast, markNorthWest, markSouthEast, markSouthWest)
-
     val move_count = moves.length
-
     var last_unmarked: Position = _
 
-    mark(start_pos.x, start_pos.y, null)
+    mark(start_pos, null)
 
     def complete(): Boolean = {
-      val x = cells.forall { case (pos, cell) => cell.mark}
+      val x = cells.forall { case (p, cell) => cell.mark}
       if(x) println(cells)//cells.foreach(println)
       x && prev_pos.size == 99
     }
 
     private def marked(p: Position): Boolean = cells(p).mark
 
-    private def mark(i: Int, j: Int, curr_pos: Position): Option[Position] = {
-      val new_p = Position(i, j)
-      cells.get(new_p) match {
+    private def mark(new_pos: Position, curr_pos: Position): Option[Position] = {
+      cells.get(new_pos) match {
         case None =>
           //println(s"Got no cell for position $new_p")
           None
         case Some(c) =>
-          marked(new_p) match {
+          marked(new_pos) match {
             case true =>
               //println(s"$new_p is already marked")
               None
@@ -53,9 +55,9 @@ object Chequer extends App {
               }
 
               val new_cell = c.copy(mark = true)
-              println(s"going to mark cell $new_cell, prev_pos size = ${prev_pos.size}")
-              cells += (new_p -> new_cell)
-              Option(new_p)
+              println(s"going to mark $new_cell, prev_pos size = ${prev_pos.size}")
+              cells += (new_pos -> new_cell)
+              Option(new_pos)
           }
       }
     }
@@ -65,19 +67,29 @@ object Chequer extends App {
       val cell = Cell(p, mark = false)
       cells += (p -> cell)
       prev_pos = prev_pos.tail
-      println(s"unmarking position $p, prev_pos size = ${prev_pos.size}")
+      println(s"unmarking $p, prev_pos size = ${prev_pos.size}")
     }
 
     // treating the top left corner as origin
-    private def markNorth(curr_pos: Position): Option[Position] = mark(curr_pos.x, curr_pos.y - 3, curr_pos)
-    private def markSouth(curr_pos: Position): Option[Position] = mark(curr_pos.x, curr_pos.y + 3, curr_pos)
-    private def markEast(curr_pos: Position): Option[Position] = mark(curr_pos.x + 3, curr_pos.y, curr_pos)
-    private def markWest(curr_pos: Position): Option[Position] = mark(curr_pos.x - 3, curr_pos.y, curr_pos)
+    private def markNorth(curr_pos: Position): Option[Position] = mark(northPos(curr_pos), curr_pos)
+    private def markSouth(curr_pos: Position): Option[Position] = mark(southPos(curr_pos), curr_pos)
+    private def markEast(curr_pos: Position): Option[Position] = mark(eastPos(curr_pos), curr_pos)
+    private def markWest(curr_pos: Position): Option[Position] = mark(westPos(curr_pos), curr_pos)
 
-    private def markNorthEast(curr_pos: Position): Option[Position] = mark(curr_pos.x + 2, curr_pos.y - 2, curr_pos)
-    private def markNorthWest(curr_pos: Position): Option[Position] = mark(curr_pos.x - 2, curr_pos.y - 2, curr_pos)
-    private def markSouthEast(curr_pos: Position): Option[Position] = mark(curr_pos.x + 2, curr_pos.y + 2, curr_pos)
-    private def markSouthWest(curr_pos: Position): Option[Position] = mark(curr_pos.x - 2, curr_pos.y + 2, curr_pos)
+    private def markNorthEast(curr_pos: Position): Option[Position] = mark(northEastPos(curr_pos), curr_pos)
+    private def markNorthWest(curr_pos: Position): Option[Position] = mark(northWestPos(curr_pos), curr_pos)
+    private def markSouthEast(curr_pos: Position): Option[Position] = mark(southEastPos(curr_pos), curr_pos)
+    private def markSouthWest(curr_pos: Position): Option[Position] = mark(southWestPos(curr_pos), curr_pos)
+
+    private def northPos(curr_pos: Position) = Position(curr_pos.x, curr_pos.y - 3)
+    private def southPos(curr_pos: Position) = Position(curr_pos.x, curr_pos.y + 3)
+    private def eastPos(curr_pos: Position) = Position(curr_pos.x + 3, curr_pos.y)
+    private def westPos(curr_pos: Position) = Position(curr_pos.x - 3, curr_pos.y)
+
+    private def northEastPos(curr_pos: Position) = Position(curr_pos.x + 2, curr_pos.y - 2)
+    private def northWestPos(curr_pos: Position) = Position(curr_pos.x - 2, curr_pos.y - 2)
+    private def southEastPos(curr_pos: Position) = Position(curr_pos.x + 2, curr_pos.y + 2)
+    private def southWestPos(curr_pos: Position) = Position(curr_pos.x - 2, curr_pos.y + 2)
   }
 
   // similarly move all ways
@@ -88,7 +100,7 @@ object Chequer extends App {
 
     val p = Position(x, y)
     val board = new Board(p)
-    //var counter = 0
+    var counter = 0
 
     @tailrec def traverse(p: Position): Boolean = {
 
@@ -101,22 +113,22 @@ object Chequer extends App {
               (Option(false), None)
             case false =>
               val prev_pos = board.prev_pos.head
-              println(s"backtracked to position $prev_pos")
+              println(s"backtracked to $prev_pos")
               board.unmark(p)
               // unmarked p should be skipped in the next iter of traverse
               (None, Option(prev_pos))
           }
         } else {
-          board.moves(moveid)(p) match {
-            case None => // wrong move
-              //println(s"incrementing moveid from $moveid")
-              mover(moveid + 1)
-
-            case Some(new_p) =>
-              if(board.last_unmarked != null && new_p == board.last_unmarked) {
-                // skip this one
+          if(board.last_unmarked != null && board.pos(moveid)(p) == board.last_unmarked) {
+            // skip this move
+            mover(moveid + 1)
+          } else {
+            board.moves(moveid)(p) match {
+              case None => // wrong move
+                //println(s"incrementing moveid from $moveid")
                 mover(moveid + 1)
-              } else {
+
+              case Some(new_p) =>
                 board.last_unmarked = null
                 if(board.complete()) {
                   (Option(true), None)
@@ -124,16 +136,16 @@ object Chequer extends App {
                   // game on
                   (None, Option(new_p))
                 }
-              }
+            }
           }
         }
       }
       mover(0) match {
         case (None, Some(pos)) =>
-          //counter += 1
-          //if(counter > 1000) System.exit(0)
+          counter += 1
+          if(counter > 1000) System.exit(0)
           traverse(pos)
-        case (Some(result), None) => result
+        case (Some(res), None) => res
         case _ => throw new Exception(s"how the hell did it land here")
       }
     }
@@ -149,12 +161,12 @@ object Chequer extends App {
     }
     val visit_all = visits.forall(_._1)
     val routes: IndexedSeq[(Position, List[Position])] = starting_positions.zip(visits.map(x => x._2))
-    val answer = if(visit_all) (Console.GREEN + "YES!" + Console.RESET) else (Console.RED + "NO :(" + Console.RESET)
+    val answer = if(visit_all) Console.GREEN + "YES!" + Console.RESET else Console.RED + "NO :(" + Console.RESET
     println(Console.BLUE + s"Is it possible for the pawn to visit all tiles on the board following the above rules? "
       + s"Answer: $answer")
     println(Console.BLUE + "Routes\n" + Console.RESET)
     routes.foreach { case (start, transit) =>
-      println(Console.BLUE + s"Starting pos: $start, Transit size: ${transit.size}" + Console.GREEN + s" Transit: ${transit}")
+      println(Console.BLUE + s"Starting pos: $start, Transit size: ${transit.size}" + Console.GREEN + s" Transit: $transit")
     }
   }
 

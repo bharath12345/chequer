@@ -1,0 +1,17 @@
+Notes:
+
+1. This solution is NOT complete. I got into a tangle trying to solve the problem of loops while
+  backtracking. The scenario am yet to fix is traversals like: 
+  x -> y -> z -> (backtracked) y -> (backtracked) x -> a -> b -> (backtracked) a -> (backtracked) x -> y -> z ... so on
+  
+2. Despite this above scenario that I am yet to solve, the general construct of my solution is as follows:
+  2.1 I have a Board class that holds the state of traversals from a specific starting position (which it takes as constructor argument)
+  2.2 Board contains the cells of the 10X10 checkerboard. A cell is marked true if it has been traversed and false if it has not been
+  2.3 Board exposes a bunch of methods to traverse. I stored the different traversal in an array of Function1 for ease of use
+  2.4 The program can be run on the SBT console in 2 ways - 
+      (a) using a starting position argument. Ex: "run 0 0" will evaluate the traversal starting at position (0,0)
+      (b) no arg will evaluate all positions as starting positions on the board. Ex: "run". This command will hang due to the incomplete 
+      nature of my solution :(
+  2.5 The heart of the program is the function called compute() which contains 2 tail-recursive and one non-tail recursive functions. 
+    The function is non trivial but I have added some comments to explain what am trying to do. The idea is to try different moves 
+    from the starting position and backtrack when no moves are possible and there are still unmarked cells on the checkerboard

@@ -104,7 +104,6 @@ object Chequer extends App {
 
     val p = Position(x, y)
     val board = new Board(p)
-    var counter = 0
 
     // position 'p' is from where traversal on the board is continued
     @tailrec def traverse(p: Position): Boolean = {
@@ -167,10 +166,7 @@ object Chequer extends App {
         }
       }
       mover(0) match {
-        case (None, Some(pos)) =>
-          counter += 1
-          if (counter > 5000) System.exit(0)
-          traverse(pos)
+        case (None, Some(pos)) => traverse(pos)
         case (Some(res), None) => res
         case _ => throw new Exception(s"how the hell did it land here")
       }
